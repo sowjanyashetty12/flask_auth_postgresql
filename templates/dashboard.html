@@ -1,1 +1,7 @@
-<h1>Dashboard Page</h1>
+{% extends "base.html"%}
+{% block content %}
+<h2>Home Page</h2>
+<p>welcome {{name}}</p>
+
+<a href="/logout" class="btn btn-dark">Logout</a>
+{% endblock%}

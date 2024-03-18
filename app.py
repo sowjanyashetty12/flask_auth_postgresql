@@ -1,5 +1,5 @@
-from flask import Flask,render_template,redirect,url_for
-from forms import RegisterForm
+from flask import Flask,render_template,redirect,url_for,session,flash
+from forms import RegisterForm,LoginForm
 import os
 import bcrypt,psycopg2
 app=Flask(__name__)
@@ -14,10 +14,26 @@ def db_connect():
 
 @app.route('/')
 def index():
- return render_template('index.html')
-@app.route("/login")
+
+ return render_template("index.html")
+@app.route("/login" , methods=["post","get"])
 def login():
- return render_template("login.html")
+  form=LoginForm()
+  if form.validate_on_submit():
+   email=form.email.data
+   password=form.password.data
+   conn=db_connect()
+   cur=conn.cursor()
+   cur.execute('''SELECT * FROM USERS WHERE email=%s''',(email,))
+   user=cur.fetchone()
+   cur.close()
+   if user and password==user[2]:
+     session['user_id']=user[3]
+     return redirect(url_for("dashboard"))
+   else:
+     flash("Login failed . Please check your username and password")
+     return redirect(url_for("login"))
+  return render_template("login.html",form=form)
 
 @app.route("/register", methods=["GET","POST"])
 def signup():
@@ -44,8 +60,22 @@ def signup():
     
 @app.route("/dashboard")
 def dashboard():
- return render_template("dashboard.html")
-
+  if 'user_id' in session:
+   userid=session['user_id']
+   conn=db_connect()
+   cur=conn.cursor()
+   cur.execute('''SELECT * FROM USERS WHERE userid=%s''',(userid,))
+   user=cur.fetchone()
+   cur.close()
+   if user:
+     name=user[0]
+     return render_template("dashboard.html",name=name)
+  return redirect(url_for("login"))
+@app.route("/logout")
+def logingout():
+ session.pop('user_id',None)
+ flash("Logged out Successfully")
+ return redirect(url_for("login"))
 
 if __name__=="__main__":
  app.run(debug=True)

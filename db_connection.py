@@ -4,6 +4,7 @@ conn=psycopg2.connect(
 ) 
 cur=conn.cursor()
 cur.execute('''CREATE TABLE IF NOT EXISTS users(name varchar(100) NOT NULL,email varchar(100) NOT NULL,password varchar(100) NOT NULL)''')
+cur.execute('''ALTER TABLE users ADD COLUMN userid SERIAL PRIMARY KEY''')
 conn.commit()
 cur.close()
 conn.close()
